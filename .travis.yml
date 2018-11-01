@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t czechue/react-test -f ./client/Dockerfile.dev ./client
+  # anny additional tests builds goes here
+  # docker build myotherproject
+
+script:
+  - docker run czechue/react-test npm test -- --coverage
+  #  - docker run myotherproject
+
+after_success:
+  - docker build -t czechue/multi-client ./client
+  - docker build -t czechue/multi-nginx ./nginx
+  - docker build -t czechue/multi-server ./server
+  - docker build -t czechue/multi-worker ./worker
+  # Log in to the docker CLI (add envs in travis project settings)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to docker hub
+  - docker push czechue/multi-client
+  - docker push czechue/multi-nginx
+  - docker push czechue/multi-server
+  - docker push czechue/multi-worker
